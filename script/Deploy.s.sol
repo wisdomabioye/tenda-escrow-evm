@@ -30,9 +30,7 @@ contract Deploy is Script {
         uint64 gracePeriod = uint64(vm.envOr("TENDA_GRACE_PERIOD_S", uint256(3_600)));
 
         vm.startBroadcast();
-        escrow = new TendaEscrow(
-            admin, disputeAdmin, treasury, feeBps, seekerFeeBps, approvalWindow, gracePeriod
-        );
+        escrow = new TendaEscrow(admin, disputeAdmin, treasury, feeBps, seekerFeeBps, approvalWindow, gracePeriod);
         vm.stopBroadcast();
 
         console.log("TendaEscrow deployed:", address(escrow));

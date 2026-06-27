@@ -70,9 +70,7 @@ contract TendaEscrowTest is Test {
     bytes32 internal constant PROOF = keccak256("proof");
 
     function setUp() public {
-        escrow = new TendaEscrow(
-            admin, disputeAdmin, treasury, FEE_BPS, SEEKER_FEE_BPS, APPROVAL_WINDOW, GRACE
-        );
+        escrow = new TendaEscrow(admin, disputeAdmin, treasury, FEE_BPS, SEEKER_FEE_BPS, APPROVAL_WINDOW, GRACE);
         usdc = new MockUSDC();
         vm.deal(creator, 100 ether);
         vm.deal(worker, 100 ether);
@@ -97,8 +95,7 @@ contract TendaEscrowTest is Test {
         // NB literal kind — calling escrow.KIND_GIG() here would consume
         // the prank (it's a contract call) and create as the test contract.
         escrow.createEscrow{value: AMOUNT}(
-            id, 0, address(0), AMOUNT, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
+            id, 0, address(0), AMOUNT, address(0), uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
         );
     }
 
@@ -106,8 +103,7 @@ contract TendaEscrowTest is Test {
         vm.startPrank(creator);
         usdc.approve(address(escrow), amount);
         escrow.createEscrow(
-            id, 0, address(usdc), amount, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, 0, false
+            id, 0, address(usdc), amount, address(0), uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, 0, false
         );
         vm.stopPrank();
     }
@@ -164,7 +160,9 @@ contract TendaEscrowTest is Test {
         escrow.createEscrow(id, 0, address(0), 0, address(0), deadline, DURATION, BOND, false);
         // deadline in past
         vm.expectRevert(TendaEscrow.AcceptDeadlineInPast.selector);
-        escrow.createEscrow{value: AMOUNT}(id, 0, address(0), AMOUNT, address(0), uint64(block.timestamp), DURATION, BOND, false);
+        escrow.createEscrow{value: AMOUNT}(
+            id, 0, address(0), AMOUNT, address(0), uint64(block.timestamp), DURATION, BOND, false
+        );
         // duration below 1h / above 180d
         vm.expectRevert(TendaEscrow.CompletionDurationOutOfRange.selector);
         escrow.createEscrow{value: AMOUNT}(id, 0, address(0), AMOUNT, address(0), deadline, 3599, BOND, false);
@@ -199,7 +197,8 @@ contract TendaEscrowTest is Test {
         escrow.acceptEscrow(id);
 
         (,,,,, address cp,,, uint64 _ad, uint64 _dur, uint64 completion,,,,) = escrow.escrows(id);
-        _ad; _dur;
+        _ad;
+        _dur;
         assertEq(cp, worker);
         assertEq(completion, uint64(block.timestamp) + DURATION);
         assertEq(uint8(status(id)), 1); // Accepted
@@ -227,8 +226,7 @@ contract TendaEscrowTest is Test {
         bytes16 id = newId();
         vm.prank(creator);
         escrow.createEscrow{value: AMOUNT}(
-            id, 0, address(0), AMOUNT, worker,
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
+            id, 0, address(0), AMOUNT, worker, uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
         );
 
         vm.prank(outsider);
@@ -259,8 +257,7 @@ contract TendaEscrowTest is Test {
         bytes16 id = newId();
         vm.prank(creator);
         escrow.createEscrow{value: AMOUNT}(
-            id, 0, address(0), AMOUNT, worker,
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
+            id, 0, address(0), AMOUNT, worker, uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
         );
         vm.prank(outsider);
         vm.expectRevert(TendaEscrow.NotAssignedCounterparty.selector);
@@ -278,7 +275,7 @@ contract TendaEscrowTest is Test {
         vm.expectEmit(true, false, false, true);
         emit TendaEscrow.ProofSubmitted(id, PROOF);
         escrow.submitProof(id, PROOF);
-        (,,,,,,,,,, , uint64 approval,,,) = escrow.escrows(id);
+        (,,,,,,,,,,, uint64 approval,,,) = escrow.escrows(id);
         assertEq(approval, uint64(block.timestamp) + APPROVAL_WINDOW);
     }
 
@@ -319,8 +316,15 @@ contract TendaEscrowTest is Test {
         vm.startPrank(creator);
         usdc.approve(address(escrow), amount);
         escrow.createEscrow(
-            id, 0, address(usdc), amount, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, 0, true // isSeeker
+            id,
+            0,
+            address(usdc),
+            amount,
+            address(0),
+            uint64(block.timestamp) + ACCEPT_WINDOW,
+            DURATION,
+            0,
+            true // isSeeker
         );
         vm.stopPrank();
         vm.prank(worker);
@@ -503,8 +507,7 @@ contract TendaEscrowTest is Test {
         vm.startPrank(creator);
         usdc.approve(address(escrow), amount);
         escrow.createEscrow(
-            id, 0, address(usdc), amount, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, bond, false
+            id, 0, address(usdc), amount, address(0), uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, bond, false
         );
         vm.stopPrank();
         vm.startPrank(worker);
@@ -564,8 +567,7 @@ contract TendaEscrowTest is Test {
         uint256 odd = 1 ether + 1;
         vm.prank(creator);
         escrow.createEscrow{value: odd}(
-            id, 0, address(0), odd, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
+            id, 0, address(0), odd, address(0), uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, BOND, false
         );
         vm.prank(worker);
         escrow.acceptEscrow(id);
@@ -684,8 +686,7 @@ contract TendaEscrowTest is Test {
         vm.deal(creator, amount);
         vm.prank(creator);
         escrow.createEscrow{value: amount}(
-            id, 0, address(0), amount, address(0),
-            uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, 0, isSeeker
+            id, 0, address(0), amount, address(0), uint64(block.timestamp) + ACCEPT_WINDOW, DURATION, 0, isSeeker
         );
         vm.prank(worker);
         escrow.acceptEscrow(id);

@@ -162,7 +162,9 @@ contract TendaEscrow is ReentrancyGuard {
         uint64 approvalWindowSeconds_,
         uint64 gracePeriodSeconds_
     ) {
-        if (admin_ == address(0) || disputeAdmin_ == address(0) || treasury_ == address(0)) revert ZeroAddress();
+        if (admin_ == address(0) || disputeAdmin_ == address(0) || treasury_ == address(0)) {
+            revert ZeroAddress();
+        }
         _validateFeeBps(feeBps_, seekerFeeBps_);
         _validateApprovalWindow(approvalWindowSeconds_);
         _validateGracePeriod(gracePeriodSeconds_);
@@ -241,8 +243,7 @@ contract TendaEscrow is ReentrancyGuard {
         if (amount == 0) revert AmountTooLow();
         if (acceptDeadline <= block.timestamp) revert AcceptDeadlineInPast();
         if (
-            completionDuration < MIN_COMPLETION_DURATION_SECONDS
-                || completionDuration > MAX_COMPLETION_DURATION_SECONDS
+            completionDuration < MIN_COMPLETION_DURATION_SECONDS || completionDuration > MAX_COMPLETION_DURATION_SECONDS
         ) revert CompletionDurationOutOfRange();
         if (escrows[escrowId].creator != address(0)) revert EscrowAlreadyExists();
 
